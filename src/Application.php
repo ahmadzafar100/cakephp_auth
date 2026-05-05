@@ -31,6 +31,7 @@ use Cake\Routing\Middleware\AssetMiddleware;
 use Cake\Routing\Middleware\RoutingMiddleware;
 use Cake\Http\ServerRequest;
 use App\Middleware\JwtMiddleware;
+use Cake\Http\Middleware\CorsMiddleware;
 
 /**
  * Application setup class.
@@ -81,6 +82,7 @@ class Application extends BaseApplication
     public function middleware(MiddlewareQueue $middlewareQueue): MiddlewareQueue
     {
         $middlewareQueue
+
             // Catch any exceptions in the lower layers,
             // and make an error page/response
             ->add(new ErrorHandlerMiddleware(Configure::read('Error'), $this))
@@ -120,6 +122,25 @@ class Application extends BaseApplication
         $middlewareQueue->add($csrf);
 
         $middlewareQueue->add(new JwtMiddleware());
+
+        $middlewareQueue->add(function ($request, $handler) {
+
+            if ($request->getMethod() === 'OPTIONS') {
+                return (new \Cake\Http\Response())
+                    ->withHeader('Access-Control-Allow-Origin', 'http://localhost:3000')
+                    ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                    ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+                    ->withHeader('Access-Control-Allow-Credentials', 'true');
+            }
+
+            $response = $handler->handle($request);
+
+            return $response
+                ->withHeader('Access-Control-Allow-Origin', 'http://localhost:3000')
+                ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+                ->withHeader('Access-Control-Allow-Credentials', 'true');
+        });
 
         return $middlewareQueue;
     }
