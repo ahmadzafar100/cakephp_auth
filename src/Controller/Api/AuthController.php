@@ -68,7 +68,7 @@ class AuthController extends AppController
 
         $payload = [
             'iat' => time(),
-            'exp' => time() + 86400, // valid for 10 minutes
+            'exp' => time() + 600, // valid for 10 minutes
             'token_version' => $user->token_version,
             'data' => [
                 'id' => $user->id,

@@ -81,6 +81,24 @@ class Application extends BaseApplication
      */
     public function middleware(MiddlewareQueue $middlewareQueue): MiddlewareQueue
     {
+        // 🔥 MUST BE FIRST
+        $middlewareQueue->add(function ($request, $handler) {
+
+            $response = null;
+
+            // ✅ Handle preflight
+            if ($request->getMethod() === 'OPTIONS') {
+                $response = new \Cake\Http\Response();
+            } else {
+                $response = $handler->handle($request);
+            }
+
+            return $response
+                ->withHeader('Access-Control-Allow-Origin', 'http://localhost:3000')
+                ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+                ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+                ->withHeader('Access-Control-Allow-Credentials', 'true');
+        });
         $middlewareQueue
 
             // Catch any exceptions in the lower layers,
@@ -122,25 +140,6 @@ class Application extends BaseApplication
         $middlewareQueue->add($csrf);
 
         $middlewareQueue->add(new JwtMiddleware());
-
-        $middlewareQueue->add(function ($request, $handler) {
-
-            if ($request->getMethod() === 'OPTIONS') {
-                return (new \Cake\Http\Response())
-                    ->withHeader('Access-Control-Allow-Origin', 'http://localhost:3000')
-                    ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-                    ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-                    ->withHeader('Access-Control-Allow-Credentials', 'true');
-            }
-
-            $response = $handler->handle($request);
-
-            return $response
-                ->withHeader('Access-Control-Allow-Origin', 'http://localhost:3000')
-                ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-                ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-                ->withHeader('Access-Control-Allow-Credentials', 'true');
-        });
 
         return $middlewareQueue;
     }
